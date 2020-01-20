@@ -1,22 +1,19 @@
-'use strict';
-
 const express = require('express');
+const http = require('http').Server(express);
+const Socketeio = require('socket.io')(http);
+
 
 // Constants
 const PORT = 8000;
 const HOST = 'localhost';
 
-// App
-const app = express();
-app.get('/', (req, res) => {
-  res.send('Hello world\n');
+Socketeio.on("connection", socket => {
+  socket.emit("holo", 123)
 });
 
-app.get('/homero', (req, res) => {
-  res.send('homero');
-});
 
-app.listen(PORT);
-console.log(`Running on http://${HOST}:${PORT}`);
+http.listen(PORT, () => {
+  console.log(`Running on http://${HOST}:${PORT}`)
+});
 
 

@@ -83,7 +83,7 @@ Socketeio.use(function (socket, next) {
         }
     })
     .on("connection", socket => {
-
+        testConexion();
 
         socket.on('test', function (msg) {
             console.log('message: ' + msg);
@@ -92,15 +92,29 @@ Socketeio.use(function (socket, next) {
         socket.on('disconnect', function () {
             console.log('Disconnected user');
         });
+        socket.on('logout', function () {
+            console.log('logout user');
+            socket.disconnect();
+            testConexion();
+
+        });
 
         socket.on('getUserName', function () {
+            testConexion();
             socket.emit("setUserName", "Jesuswapo")
         });
     });
 
+    function testConexion() {
+        Socketeio.clients((error, clients) => {
+            if (error) throw error;
+            console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
+          });
+    }
+    
 //MONGO DB
 
-client.connect(config.DB, function (err, db) {
+/*client.connect(config.DB, function (err, db) {
     if (err) throw err;
     var dbo = db.db("mydb");
     dbo.collection("indirects").findOne({}, function (err, result) {
@@ -108,7 +122,7 @@ client.connect(config.DB, function (err, db) {
         console.log(result.name);
         db.close();
     });
-});
+});*/
 
 //usar cuando al crear la base de datos
 function createAll() {

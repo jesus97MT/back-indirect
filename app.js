@@ -81,6 +81,15 @@ Socketeio.use(function (socket, next) {
             operationsDB.addTokenToUser(dbConfig, email, newToken);
             socket.emit("getToken", newToken);
         }
+        if (op === "token") {
+            const dbConfig = config.userConfig;
+            const token = socket.handshake.query.token;
+            operationsDB.findUserByToken(dbConfig, token).then((user) => {
+                if (user) socket.emit("getUserByToken", user);
+                socket.emit("getUserByToken", null);
+            });
+
+        }
     })
     .on("connection", socket => {
         testConexion();

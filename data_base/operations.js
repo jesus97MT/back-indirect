@@ -93,5 +93,24 @@ module.exports.addTokenToUser = function (dbConfig, user, token) {
     });
 }
 
+module.exports.updateUserData = function (dbConfig, user) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    
+    client.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db(dataBaseName);
+        var myquery = { email: user.email };
+        var newvalues = { $set: { name: user.name, surname: user.surname } };
+        dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+            if (err) throw err;
+            console.log("updateUserData");
+            db.close();
+        });
+    });
+}
+
 
 

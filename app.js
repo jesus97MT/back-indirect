@@ -80,6 +80,11 @@ Socketeio.use(function (socket, next) {
 
             operationsDB.addTokenToUser(dbConfig, email, newToken);
             socket.emit("getToken", newToken);
+
+            operationsDB.findUserByToken(dbConfig, newToken).then((user) => {
+                if (user) socket.emit("getUserByLogin", user);
+                socket.emit("getUserByLogin", null);
+            });
         }
         if (op === "token") {
             const dbConfig = config.userConfig;
@@ -112,6 +117,14 @@ Socketeio.use(function (socket, next) {
             testConexion();
             socket.emit("setUserName", "Jesuswapo")
         });
+
+        socket.on('updateUserData', function (data) {
+            //TO DO comprobar datos y crear objeto con datos que puede modificar el email no
+            const dbConfig = config.userConfig;
+            operationsDB.updateUserData(dbConfig, data);
+
+        });
+        
     });
 
     function testConexion() {

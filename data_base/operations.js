@@ -15,7 +15,7 @@ module.exports.createCollection = function (url, dataBaseName, collectionName) {
     });
 }
 
-module.exports.createUser = function (dbConfig, email, password) {
+module.exports.createUser = function (dbConfig, email, password, userId) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
@@ -23,7 +23,7 @@ module.exports.createUser = function (dbConfig, email, password) {
     client.connect(url, function (err, db) {
         if (err) throw err;
         var dbo = db.db(dataBaseName);
-        var myobj = { name: "", surname: "", email, password, token: "", tokenDate: "" };//modelo
+        var myobj = { name: "", surname: "", email, password, token: "", tokenDate: "", userId};//modelo
         dbo.collection(collectionName).insertOne(myobj, function (err, res) {
             if (err) throw err;
             console.log(email + " usuario creado");
@@ -103,7 +103,7 @@ module.exports.updateUserData = function (dbConfig, user) {
         if (err) throw err;
         var dbo = db.db(dataBaseName);
         var myquery = { email: user.email };
-        var newvalues = { $set: { name: user.name, surname: user.surname } };
+        var newvalues = { $set: { name: user.name, surname: user.surname, userId: user.userId } };
         dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
             if (err) throw err;
             console.log("updateUserData");

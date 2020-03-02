@@ -57,8 +57,9 @@ Socketeio.use(function (socket, next) {
                 const user = JSON.parse(socket.handshake.query.user)
                 const email = user.email;
                 const password = user.password;
+                const userId = user.userId;
 
-                operationsDB.createUser(dbConfig,email, password);
+                operationsDB.createUser(dbConfig, email, password, userId);
                 next();
                 break;
             }

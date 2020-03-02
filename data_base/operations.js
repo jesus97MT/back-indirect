@@ -74,6 +74,27 @@ module.exports.findUserByToken = function (dbConfig, token) {
     })
 }
 
+module.exports.findUserByUserId = function (dbConfig, userId) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        var user = {};
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userId };
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                user = result[0];
+                resolve(user);
+            });
+        });
+    })
+}
+
 module.exports.addTokenToUser = function (dbConfig, user, token) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;

@@ -125,6 +125,17 @@ Socketeio.use(function (socket, next) {
             operationsDB.updateUserData(dbConfig, data);
 
         });
+
+        socket.on('findUserByUserId', function (userId) {
+            console.log(userId)
+            //TO DO comprobar datos y crear objeto con datos que puede modificar el email no
+            const dbConfig = config.userConfig;
+            operationsDB.findUserByUserId(dbConfig, userId).then((user) => {
+                if (user) socket.emit("getUserByUserId", user);
+                socket.emit("getUserByUserId", null);
+            });
+
+        });
         
     });
 

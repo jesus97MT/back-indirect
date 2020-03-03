@@ -79,13 +79,16 @@ Socketeio.use(function (socket, next) {
             const email = userData.email;
             const newToken = Utils.getNewToken();
 
-            operationsDB.addTokenToUser(dbConfig, email, newToken);
-            socket.emit("getToken", newToken);
+            operationsDB.addTokenToUser(dbConfig, email, newToken).then((token) => {
+                socket.emit("getToken", newToken);
 
-            operationsDB.findUserByToken(dbConfig, newToken).then((user) => {
-                if (user) socket.emit("getUserByLogin", user);
-                socket.emit("getUserByLogin", null);
+                operationsDB.findUserByToken(dbConfig, newToken).then((user) => {
+                    console.log(user)
+                    if (user) socket.emit("getUserByLogin", user);
+                    socket.emit("getUserByLogin", null);
+                });
             });
+            
         }
         if (op === "token") {
             const dbConfig = config.userConfig;

@@ -100,16 +100,19 @@ module.exports.addTokenToUser = function (dbConfig, user, token) {
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
 
-    const dateNow = Utils.getDate();
-    client.connect(url, function (err, db) {
-        if (err) throw err;
-        var dbo = db.db(dataBaseName);
-        var myquery = { email: user };
-        var newvalues = { $set: { token: token, tokenDate: dateNow } };
-        dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+    return new Promise(resolve => {
+        const dateNow = Utils.getDate();
+        client.connect(url, function (err, db) {
             if (err) throw err;
-            console.log("addTokenToUser");
-            db.close();
+            var dbo = db.db(dataBaseName);
+            var myquery = { email: user };
+            var newvalues = { $set: { token: token, tokenDate: dateNow } };
+            dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("addTokenToUser");
+                db.close();
+                resolve(token);
+            });
         });
     });
 }

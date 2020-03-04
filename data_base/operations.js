@@ -150,7 +150,7 @@ module.exports.followUserByUID = function (dbConfig, op, userA, userB) {
             dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
                 if (err) throw err;
                 console.log("followUserByUID");
-                resolve(userB + op);
+                resolve(userB);
                 db.close();
             });
         });
@@ -171,7 +171,7 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
             dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
                 if (err) throw err;
                 console.log("unFollowUserByUID");
-                resolve(userB + op);
+                resolve(userB);
                 db.close();
             });
         });

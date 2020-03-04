@@ -150,7 +150,7 @@ Socketeio.use(function (socket, next) {
                 const fromFollowUserUID = fromFollowUser.userUID;
                 const p1 = operationsDB.followUserByUID(dbConfig, "followers", toFollowUserUID, fromFollowUserUID);
                 const p2 = operationsDB.followUserByUID(dbConfig, "following", fromFollowUserUID, toFollowUserUID);
-                Promise.all([p1, p2]).then(values => { 
+                Promise.all([p1, p2]).then(values => {
                     if (values && !!values.length)
                         socket.emit("onFollowUser", values);
                     else
@@ -170,9 +170,9 @@ Socketeio.use(function (socket, next) {
                 const p2 = operationsDB.unFollowUserByUID(dbConfig, "following", fromFollowUserUID, toFollowUserUID);
                 Promise.all([p1, p2]).then(values => { 
                     if (values && !!values.length)
-                        socket.emit("onFollowUser", values);
+                        socket.emit("onUnFollowUser", values);
                     else
-                        socket.emit("onFollowUser", values);
+                        socket.emit("onUnFollowUser", values);
                 });
             });
         });

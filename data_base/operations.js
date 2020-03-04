@@ -15,7 +15,7 @@ module.exports.createCollection = function (url, dataBaseName, collectionName) {
     });
 }
 
-module.exports.createUser = function (dbConfig, email, password, userId) {
+module.exports.createUser = function (dbConfig, email, password, userId, userUID) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
@@ -23,7 +23,7 @@ module.exports.createUser = function (dbConfig, email, password, userId) {
     client.connect(url, function (err, db) {
         if (err) throw err;
         var dbo = db.db(dataBaseName);
-        var myobj = { name: "", surname: "", email, password, token: "", tokenDate: "", userId};//modelo
+        var myobj = { name: "", surname: "", email, password, token: "", tokenDate: "", userId, userUID};//modelo
         dbo.collection(collectionName).insertOne(myobj, function (err, res) {
             if (err) throw err;
             console.log(email + " usuario creado");
@@ -71,7 +71,7 @@ module.exports.findUserByToken = function (dbConfig, token) {
                 resolve(user);
             });
         });
-    })
+    });
 }
 
 module.exports.findUserByUserId = function (dbConfig, userId) {
@@ -134,6 +134,48 @@ module.exports.updateUserData = function (dbConfig, user) {
             db.close();
         });
     });
+}
+
+module.exports.followUserByUID = function (dbConfig, op, userA, userB) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var myquery = { userUID: userA };
+            var newvalues = { $addToSet: { [op]: userB } };
+            dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("followUserByUID");
+                resolve(userB + op);
+                db.close();
+            });
+        });
+    })
+}
+
+module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var myquery = { userUID: userA };
+            var newvalues = { $pull: { [op]: userB } };
+            dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+                if (err) throw err;
+                console.log("unFollowUserByUID");
+                resolve(userB + op);
+                db.close();
+            });
+        });
+    })
 }
 
 

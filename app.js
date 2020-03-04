@@ -58,8 +58,9 @@ Socketeio.use(function (socket, next) {
                 const email = user.email;
                 const password = user.password;
                 const userId = user.userId;
+                const userUID = Utils.getUID();
 
-                operationsDB.createUser(dbConfig, email, password, userId);
+                operationsDB.createUser(dbConfig, email, password, userId, userUID);
                 next();
                 break;
             }
@@ -130,16 +131,51 @@ Socketeio.use(function (socket, next) {
         });
 
         socket.on('findUserByUserId', function (userId) {
-            console.log(userId)
             //TO DO comprobar datos y crear objeto con datos que puede modificar el email no
             const dbConfig = config.userConfig;
             operationsDB.findUserByUserId(dbConfig, userId).then((user) => {
-                if (user) socket.emit("getUserByUserId", user);
-                socket.emit("getUserByUserId", null);
+                if (user)
+                    socket.emit("getUserByUserId", user);
+                else
+                    socket.emit("getUserByUserId", null);
             });
-
         });
-        
+
+        socket.on('followUser', function (data) {
+            const token = data.token;
+            const toFollowUserUID = data.data;
+
+            const dbConfig = config.userConfig;
+            operationsDB.findUserByToken(dbConfig, token).then((fromFollowUser) => {
+                const fromFollowUserUID = fromFollowUser.userUID;
+                const p1 = operationsDB.followUserByUID(dbConfig, "followers", toFollowUserUID, fromFollowUserUID);
+                const p2 = operationsDB.followUserByUID(dbConfig, "following", fromFollowUserUID, toFollowUserUID);
+                Promise.all([p1, p2]).then(values => { 
+                    if (values && !!values.length)
+                        socket.emit("onFollowUser", values);
+                    else
+                        socket.emit("onFollowUser", values);
+                });
+            });
+        });
+
+        socket.on('unFollowUser', function (data) {
+            const token = data.token;
+            const toFollowUserUID = data.data;
+
+            const dbConfig = config.userConfig;
+            operationsDB.findUserByToken(dbConfig, token).then((fromFollowUser) => {
+                const fromFollowUserUID = fromFollowUser.userUID;
+                const p1 = operationsDB.unFollowUserByUID(dbConfig, "followers", toFollowUserUID, fromFollowUserUID);
+                const p2 = operationsDB.unFollowUserByUID(dbConfig, "following", fromFollowUserUID, toFollowUserUID);
+                Promise.all([p1, p2]).then(values => { 
+                    if (values && !!values.length)
+                        socket.emit("onFollowUser", values);
+                    else
+                        socket.emit("onFollowUser", values);
+                });
+            });
+        });
     });
 
     function testConexion() {

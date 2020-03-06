@@ -1,5 +1,5 @@
 // db.js
-const DB_URL = "mongodb://db:27017/newdb";
+const DB_URL = "mongodb+srv://indirect:tTiwp0XDPEWu7wnL@cluster0-fbnjg.mongodb.net/test?retryWrites=true&w=majority";
 const DB_NAME = "mydb";
 
 const COL_NAME_USERS = "users";

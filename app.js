@@ -139,6 +139,9 @@ Socketeio.use(function (socket, next) {
                 else
                     socket.emit("getUserByUserId", null);
             });
+            console.log("WWWWWWWWWWWWWWWWWW")
+            //const a = operationsDB.test(dbConfig)
+             
         });
 
         socket.on('followUser', function (data) {
@@ -207,7 +210,7 @@ function createAll() {
     });
 }
 
-http.listen(PORT, () => {
+http.listen(process.env.PORT || PORT, () => {
     console.log(`Running on http://${HOST}:${PORT}`)
 });
 

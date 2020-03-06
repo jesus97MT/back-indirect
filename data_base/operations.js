@@ -23,8 +23,10 @@ module.exports.createUser = function (dbConfig, email, password, userId, userUID
     client.connect(url, function (err, db) {
         if (err) throw err;
         var dbo = db.db(dataBaseName);
-        var myobj = { name: "", surname: "", email, password, token: "", tokenDate: "", userId, userUID};//modelo
-        dbo.collection(collectionName).insertOne(myobj, function (err, res) {
+        var query = { email };
+        var myobj = { $set: {name: "", surname: "", email, password, token: "", tokenDate: "", userId, userUID }};//modelo
+        var options =  { upsert: true };
+        dbo.collection(collectionName).updateOne(query, myobj, options, function (err, res) {
             if (err) throw err;
             console.log(email + " usuario creado");
             db.close();
@@ -122,7 +124,7 @@ module.exports.updateUserData = function (dbConfig, user) {
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
 
-    
+
     client.connect(url, function (err, db) {
         if (err) throw err;
         var dbo = db.db(dataBaseName);
@@ -157,6 +159,33 @@ module.exports.followUserByUID = function (dbConfig, op, userA, userB) {
     })
 }
 
+module.exports.test = function (dbConfig) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+    console.log("test");
+
+    client.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db(dataBaseName);
+        
+        const a = dbo.collection(collectionName).watch();
+        a.on('change', (change) => {
+            console.log(change); // You could parse out the needed info and send only that data. 
+
+        });
+    
+        return true;
+        /*dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+            if (err) throw err;
+            console.log("followUserByUID");
+            resolve(userB);
+            db.close();
+        });*/
+    });
+}
+
+
 module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
@@ -165,7 +194,7 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
     return new Promise(resolve => {
         client.connect(url, function (err, db) {
             if (err) throw err;
-            var dbo = db.db(dataBaseName);
+            var dbo = db.db(dataBaseName).w;
             var myquery = { userUID: userA };
             var newvalues = { $pull: { [op]: userB } };
             dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
@@ -175,7 +204,7 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
                 db.close();
             });
         });
-    })
+    });
 }
 
 

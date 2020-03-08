@@ -1,6 +1,8 @@
 const mongodb = require('mongodb');
 const Utils = require('../utils/utils')
 const client = mongodb.MongoClient;
+const rxjs = require('rxjs')
+
 //Start DataBase
 
 module.exports.createCollection = function (url, dataBaseName, collectionName) {
@@ -159,30 +161,27 @@ module.exports.followUserByUID = function (dbConfig, op, userA, userB) {
     })
 }
 
-module.exports.test = function (dbConfig) {
+module.exports.test = function (dbConfig, userId) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
     console.log("test");
-
-    client.connect(url, function (err, db) {
-        if (err) throw err;
-        var dbo = db.db(dataBaseName);
-        
-        const a = dbo.collection(collectionName).watch();
-        a.on('change', (change) => {
-            console.log(change); // You could parse out the needed info and send only that data. 
-
-        });
-    
-        return true;
-        /*dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
+    return rxjs.Observable.create((subject) => {
+        client.connect(url, function (err, db) {
             if (err) throw err;
-            console.log("followUserByUID");
-            resolve(userB);
-            db.close();
-        });*/
-    });
+            var dbo = db.db(dataBaseName);
+            
+            const a = dbo.collection(collectionName).watch();
+            a.on('change', (change) => {
+                this.findUserByUserId2(dbConfig, userId).then((user) => {
+                subject.next(user);
+                });
+
+            });
+    })
+
+})
+   
 }
 
 
@@ -205,6 +204,28 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
             });
         });
     });
+}
+
+//todo
+findUserByUserId2 = function (dbConfig, userId) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        var user = {};
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userId };
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                user = result[0];
+                resolve(user);
+            });
+        });
+    })
 }
 
 

@@ -12,6 +12,9 @@ const client = mongodb.MongoClient;
 const PORT = 8000;
 const HOST = 'localhost';
 
+const rxjs = require('rxjs')
+
+
 //SOCKET IO
 Socketeio.use(function (socket, next) {
     const op = socket.handshake.query.op || null;
@@ -89,7 +92,7 @@ Socketeio.use(function (socket, next) {
                     socket.emit("getUserByLogin", null);
                 });
             });
-            
+
         }
         if (op === "token") {
             const dbConfig = config.userConfig;
@@ -139,9 +142,14 @@ Socketeio.use(function (socket, next) {
                 else
                     socket.emit("getUserByUserId", null);
             });
-            console.log("WWWWWWWWWWWWWWWWWW")
-            //const a = operationsDB.test(dbConfig)
-             
+
+            const updateData$ = operationsDB.test(dbConfig, userId);
+            const subData = updateData$.subscribe((user) => {
+                socket.emit("getUserByUserId", user);
+            })
+            //setTimeout(() => subscription.unsubscribe(), 10 * 1000);
+            // cuando se cierra la conexion o se sale de la pag?
+
         });
 
         socket.on('followUser', function (data) {
@@ -171,7 +179,7 @@ Socketeio.use(function (socket, next) {
                 const fromFollowUserUID = fromFollowUser.userUID;
                 const p1 = operationsDB.unFollowUserByUID(dbConfig, "followers", toFollowUserUID, fromFollowUserUID);
                 const p2 = operationsDB.unFollowUserByUID(dbConfig, "following", fromFollowUserUID, toFollowUserUID);
-                Promise.all([p1, p2]).then(values => { 
+                Promise.all([p1, p2]).then(values => {
                     if (values && !!values.length)
                         socket.emit("onUnFollowUser", values);
                     else
@@ -181,13 +189,13 @@ Socketeio.use(function (socket, next) {
         });
     });
 
-    function testConexion() {
-        Socketeio.clients((error, clients) => {
-            if (error) throw error;
-            console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
-          });
-    }
-    
+function testConexion() {
+    Socketeio.clients((error, clients) => {
+        if (error) throw error;
+        console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
+    });
+}
+
 //MONGO DB
 
 /*client.connect(config.DB, function (err, db) {

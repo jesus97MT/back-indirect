@@ -126,6 +126,20 @@ Socketeio.use(function (socket, next) {
             socket.emit("setUserName", "Jesuswapo")
         });
 
+        socket.on('findUserByToken', function (token) {
+            const dbConfig = config.userConfig;
+
+            operationsDB.findUserByToken(dbConfig, token).then((user) => {
+                if (user) socket.emit("getUserByToken", user);
+                else socket.emit("getUserByToken", null);
+            });
+
+            const updateData$ = operationsDB.onChangeUserByToken(dbConfig, token);
+            updateData$.subscribe((user) => {
+                socket.emit("getUserByToken", user);
+            });
+        });
+
         socket.on('updateUserData', function (data) {
             //TO DO comprobar datos y crear objeto con datos que puede modificar el email no
             const dbConfig = config.userConfig;
@@ -143,10 +157,11 @@ Socketeio.use(function (socket, next) {
                     socket.emit("getUserByUserId", null);
             });
 
-            const updateData$ = operationsDB.test(dbConfig, userId);
-            const subData = updateData$.subscribe((user) => {
+            const updateData$ = operationsDB.onChangeFindUserByUserId(dbConfig, userId);
+            updateData$.subscribe((user) => {
                 socket.emit("getUserByUserId", user);
-            })
+            });
+
             //setTimeout(() => subscription.unsubscribe(), 10 * 1000);
             // cuando se cierra la conexion o se sale de la pag?
 

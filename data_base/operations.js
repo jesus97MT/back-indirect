@@ -26,8 +26,8 @@ module.exports.createUser = function (dbConfig, email, password, userId, userUID
         if (err) throw err;
         var dbo = db.db(dataBaseName);
         var query = { email };
-        var myobj = { $set: {name: "", surname: "", email, password, token: "", tokenDate: "", userId, userUID }};//modelo
-        var options =  { upsert: true };
+        var myobj = { $set: { name: "", surname: "", email, password, token: "", tokenDate: "", userId, userUID, followers:[], following:  [] } };//modelo
+        var options = { upsert: true };
         dbo.collection(collectionName).updateOne(query, myobj, options, function (err, res) {
             if (err) throw err;
             console.log(email + " usuario creado");
@@ -99,6 +99,46 @@ module.exports.findUserByUserId = function (dbConfig, userId) {
     })
 }
 
+module.exports.onChangeFindUserByUserId = function (dbConfig, userId) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+    return rxjs.Observable.create((subject) => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+
+            const a = dbo.collection(collectionName).watch();
+            a.on('change', (change) => {
+                this.findUserByUserId2(dbConfig, userId).then((user) => {
+                    subject.next(user);
+                });
+            });
+        });
+    });
+
+}
+
+module.exports.onChangeUserByToken = function (dbConfig, token) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+    return rxjs.Observable.create((subject) => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+
+            const dataBaseWatch = dbo.collection(collectionName).watch();
+            dataBaseWatch.on('change', (change) => {
+                this.findUserByToken2(dbConfig, token).then((user) => {
+                    subject.next(user);
+                });
+            });
+        });
+    });
+
+}
+
 module.exports.addTokenToUser = function (dbConfig, user, token) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
@@ -158,30 +198,7 @@ module.exports.followUserByUID = function (dbConfig, op, userA, userB) {
                 db.close();
             });
         });
-    })
-}
-
-module.exports.test = function (dbConfig, userId) {
-    const url = dbConfig.URL;
-    const dataBaseName = dbConfig.NAME;
-    const collectionName = dbConfig.COLLECTION;
-    console.log("test");
-    return rxjs.Observable.create((subject) => {
-        client.connect(url, function (err, db) {
-            if (err) throw err;
-            var dbo = db.db(dataBaseName);
-            
-            const a = dbo.collection(collectionName).watch();
-            a.on('change', (change) => {
-                this.findUserByUserId2(dbConfig, userId).then((user) => {
-                subject.next(user);
-                });
-
-            });
-    })
-
-})
-   
+    });
 }
 
 
@@ -193,7 +210,7 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
     return new Promise(resolve => {
         client.connect(url, function (err, db) {
             if (err) throw err;
-            var dbo = db.db(dataBaseName).w;
+            var dbo = db.db(dataBaseName);
             var myquery = { userUID: userA };
             var newvalues = { $pull: { [op]: userB } };
             dbo.collection(collectionName).updateOne(myquery, newvalues, function (err, res) {
@@ -226,6 +243,28 @@ findUserByUserId2 = function (dbConfig, userId) {
             });
         });
     })
+}
+
+
+findUserByToken2 = function (dbConfig, token) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        var user = {};
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { token: token };
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                user = result[0];
+                resolve(user);
+            });
+        });
+    });
 }
 
 

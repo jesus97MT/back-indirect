@@ -202,6 +202,49 @@ Socketeio.use(function (socket, next) {
                 });
             });
         });
+
+        socket.on('getUserFollowList', function (data) {
+            const token = data.token;
+            const userId = data.userId;
+            const typeList = data.typeList;
+
+            const getUserFunction = userId ? "findUserByUserId" : "findUserByToken";
+            const getUserParam = userId || token;
+            const dbConfig = config.userConfig;
+
+            operationsDB[getUserFunction](dbConfig, getUserParam).then((user) => {
+                if (user) {
+                    const list = user[typeList];
+                    if (list && list.length > 0) {
+                        operationsDB.findUsersByUserUID(dbConfig, list).then((users) => {
+                            console.log(users);
+                            if (users && users.length)
+                                socket.emit("getFollowList", users);
+                            else
+                                socket.emit("getFollowList", []);
+
+
+                        })
+                        //searchusers
+                    }
+                    const updateData$ = operationsDB.onChangeFindUsersByUserUID(dbConfig, getUserFunction, getUserParam, typeList);
+                    updateData$.subscribe((users) => {
+                        console.log(users);
+                        socket.emit("getFollowList", users);
+                    });
+                } else {
+
+                }
+            });
+
+
+
+            //setTimeout(() => subscription.unsubscribe(), 10 * 1000);
+            // cuando se cierra la conexion o se sale de la pag?
+
+        });
+
+
     });
 
 function testConexion() {

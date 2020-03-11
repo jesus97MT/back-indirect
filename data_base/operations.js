@@ -99,6 +99,57 @@ module.exports.findUserByUserId = function (dbConfig, userId) {
     })
 }
 
+module.exports.findUsersByUserUID = function (dbConfig, usersUID) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userUID: { $in : usersUID }};
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                resolve(result);
+            });
+        });
+    })
+}
+
+
+module.exports.onChangeFindUsersByUserUID = function (dbConfig, getUserFunction, getUserParam, typeList) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+    return rxjs.Observable.create((subject) => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            const a = dbo.collection(collectionName).watch();
+            a.on('change', (change) => {
+                this[getUserFunction+"2"](dbConfig, getUserParam).then((user) => {
+                    if (user) {
+                        const list = user[typeList];
+                        console.log(list)
+                        if (list && list.length > 0) {
+                            this.findUsersByUserUID2(dbConfig, list).then((users) => {
+                                console.log("findUsersByUserUID2");
+                                //mirar si hay uno devuelve objeto y si hay más array
+                                subject.next([user]);
+                            })
+                        } else {
+                            subject.next([]);
+                        }
+                    }
+                })
+            });
+        });
+    });
+
+}
+
 module.exports.onChangeFindUserByUserId = function (dbConfig, userId) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
@@ -107,8 +158,10 @@ module.exports.onChangeFindUserByUserId = function (dbConfig, userId) {
         client.connect(url, function (err, db) {
             if (err) throw err;
             var dbo = db.db(dataBaseName);
-
-            const a = dbo.collection(collectionName).watch();
+            const pipeline = [
+                { $match: { 'fullDocument.userId': userId } },
+              ];
+            const a = dbo.collection(collectionName).watch(pipeline, { fullDocument : "updateLookup" });
             a.on('change', (change) => {
                 this.findUserByUserId2(dbConfig, userId).then((user) => {
                     subject.next(user);
@@ -127,8 +180,10 @@ module.exports.onChangeUserByToken = function (dbConfig, token) {
         client.connect(url, function (err, db) {
             if (err) throw err;
             var dbo = db.db(dataBaseName);
-
-            const dataBaseWatch = dbo.collection(collectionName).watch();
+            const pipeline = [
+                { $match: { 'fullDocument.token': token } },
+              ];
+            const dataBaseWatch = dbo.collection(collectionName).watch(pipeline, { fullDocument : "updateLookup" });
             dataBaseWatch.on('change', (change) => {
                 this.findUserByToken2(dbConfig, token).then((user) => {
                     subject.next(user);
@@ -265,6 +320,26 @@ findUserByToken2 = function (dbConfig, token) {
             });
         });
     });
+}
+
+
+findUsersByUserUID2 = function (dbConfig, usersUID) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userUID: { $in : usersUID }};
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                resolve(result);
+            });
+        });
+    })
 }
 
 

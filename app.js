@@ -222,25 +222,17 @@ Socketeio.use(function (socket, next) {
                                 socket.emit("getFollowList", users);
                             else
                                 socket.emit("getFollowList", []);
-
-
-                        })
-                        //searchusers
+                        });
                     }
-                    const updateData$ = operationsDB.onChangeFindUsersByUserUID(dbConfig, getUserFunction, getUserParam, typeList);
+                    /*const updateData$ = operationsDB.onChangeFindUsersByUserUID(dbConfig, getUserFunction, getUserParam, typeList);
                     updateData$.subscribe((users) => {
                         console.log(users);
                         socket.emit("getFollowList", users);
-                    });
+                    });*/
                 } else {
 
                 }
             });
-
-
-
-            //setTimeout(() => subscription.unsubscribe(), 10 * 1000);
-            // cuando se cierra la conexion o se sale de la pag?
 
         });
 

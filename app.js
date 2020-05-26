@@ -236,6 +236,41 @@ Socketeio.use(function (socket, next) {
 
         });
 
+        socket.on('getUserMutuals', function (data) {
+            const token = data.token;
+            const userId = data.userId;
+
+            const getUserFunction = userId ? "findUserByUserId" : "findUserByToken";
+            const getUserParam = userId || token;
+            const dbConfig = config.userConfig;
+
+
+            operationsDB[getUserFunction](dbConfig, getUserParam).then((user) => {
+                if (user) {
+                    //find mutuals
+                    const list = user['followers'].filter(function(val) {
+                        return user['following'].indexOf(val) != -1;
+                      });
+                    if (list && list.length > 0) {
+                        operationsDB.findUsersByUserUID(dbConfig, list).then((users) => {
+                            if (users && users.length)
+                                socket.emit("getMutualList", users);
+                            else
+                                socket.emit("getMutualList", []);
+                        });
+                    }
+                    /*const updateData$ = operationsDB.onChangeFindUsersByUserUID(dbConfig, getUserFunction, getUserParam, typeList);
+                    updateData$.subscribe((users) => {
+                        console.log(users);
+                        socket.emit("getFollowList", users);
+                    });*/
+                } else {
+
+                }
+            });
+
+        });
+
 
     });
 

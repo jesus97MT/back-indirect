@@ -278,6 +278,39 @@ module.exports.unFollowUserByUID = function (dbConfig, op, userA, userB) {
     });
 }
 
+
+//indirect
+
+module.exports.addIndirect = function (dbConfig, indirect) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+    const dateNow = Utils.getDate();
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var myquery = { indirectUID: indirect.indirectUID };
+            var myobj = { $set: {
+                    text: indirect.text,
+                    userUID: indirect.userUID,
+                    indirectUID: indirect.indirectUID,
+                    public: indirect.public,
+                    mutualsUIDS: indirect.uids,
+                    dateCreation:dateNow,
+                    dateUpdated: dateNow
+                } };//modelo
+            var options = { upsert: true };
+            dbo.collection(collectionName).updateOne(myquery, myobj, options, function (err, res) {
+                if (err) throw err;
+                console.log("addIndirect");
+                db.close();
+            });
+        });
+    });
+}
+
 //todo
 findUserByUserId2 = function (dbConfig, userId) {
     const url = dbConfig.URL;

@@ -11,5 +11,10 @@ module.exports = {
         URL: DB_URL,
         NAME: DB_NAME,
         COLLECTION: COL_NAME_USERS
+    },
+    indirectConfig: {
+        URL: DB_URL,
+        NAME: DB_NAME,
+        COLLECTION: COL_NAME_INDIRECTS
     }
 }

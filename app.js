@@ -271,6 +271,28 @@ Socketeio.use(function (socket, next) {
 
         });
 
+        //indirect
+
+        socket.on('addIndirect', function (data) {
+            const token = data.token;
+            const indirect = data.data;
+            
+            const dbConfigUser = config.userConfig;
+            const dbConfigIndirect = config.indirectConfig;
+
+            operationsDB.findUserByToken(dbConfigUser, token).then((user) => {
+                const userUID = user.userUID;
+                if (userUID) {
+                    indirect["userUID"] = userUID;
+                    indirect["indirectUID"] = Utils.getUID();
+                    operationsDB.addIndirect(dbConfigIndirect, indirect).then((indirect) => {
+                        console.log(indirect)
+                    })
+                }
+            });
+
+        });
+
 
     });
 

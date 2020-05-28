@@ -292,6 +292,25 @@ Socketeio.use(function (socket, next) {
             });
 
         });
+        
+        socket.on('getIndirects', function (data) {
+            const token = data.token;
+            
+            const dbConfigUser = config.userConfig;
+            const dbConfigIndirect = config.indirectConfig;
+
+            operationsDB.findUserByToken(dbConfigUser, token).then((user) => {
+                const userUID = user.userUID;
+                if (userUID) {
+                    const indirectsUIDS = user.following;
+                    indirectsUIDS.push(userUID);
+                    operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS).then((indirects) => {
+                        socket.emit("onGetIndirects", indirects);
+                    })
+                }
+            });
+
+        });
 
 
     });

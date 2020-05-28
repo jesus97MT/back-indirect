@@ -311,6 +311,26 @@ module.exports.addIndirect = function (dbConfig, indirect) {
     });
 }
 
+
+module.exports.getIndirects = function (dbConfig, usersUID) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userUID: { $in : usersUID }};
+            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                resolve(result);
+            });
+        });
+    });
+}
+
 //todo
 findUserByUserId2 = function (dbConfig, userId) {
     const url = dbConfig.URL;

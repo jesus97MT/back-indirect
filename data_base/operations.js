@@ -312,16 +312,29 @@ module.exports.addIndirect = function (dbConfig, indirect) {
 }
 
 
-module.exports.getIndirects = function (dbConfig, usersUID) {
+module.exports.getIndirects = function (dbConfig, usersUID, myUserUID) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
+    const publicIndirect= true;
 
     return new Promise(resolve => {
         client.connect(url, function (err, db) {
             if (err) throw err;
             var dbo = db.db(dataBaseName);
-            var query = { userUID: { $in : usersUID }};
+            var query = { userUID: { $in : usersUID },
+             $or: [
+                {
+                    public: publicIndirect
+                },
+                {
+                    userUID: myUserUID
+                },
+                {
+                    mutualsUIDS: [myUserUID]
+                }
+            ]
+            }
             dbo.collection(collectionName).find(query).toArray(function (err, result) {
                 if (err) throw err;
                 db.close();

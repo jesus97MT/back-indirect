@@ -304,7 +304,7 @@ Socketeio.use(function (socket, next) {
                 if (userUID) {
                     const indirectsUIDS = user.following;
                     indirectsUIDS.push(userUID);
-                    operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS).then((indirects) => {
+                    operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS, userUID).then((indirects) => {
                         socket.emit("onGetIndirects", indirects);
                     })
                 }

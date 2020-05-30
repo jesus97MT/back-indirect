@@ -13,6 +13,7 @@ const PORT = 8000;
 const HOST = 'localhost';
 
 const rxjs = require('rxjs')
+const fs = require('fs')
 
 
 //SOCKET IO
@@ -130,8 +131,17 @@ Socketeio.use(function (socket, next) {
             const dbConfig = config.userConfig;
 
             operationsDB.findUserByToken(dbConfig, token).then((user) => {
-                if (user) socket.emit("getUserByToken", user);
-                else socket.emit("getUserByToken", null);
+                if (user) {
+                    const userUID = user.userUID;
+                    const filePath = getAvatarPath(userUID);
+                    fs.readFile(filePath, function (err, data) {
+                        if (err) return console.log(err);
+                        const image = data;
+                        socket.emit("getUserByToken", user);
+                        socket.emit("getUserAvatarByToken", image);
+                    })
+
+                } else socket.emit("getUserByToken", null);
             });
 
             const updateData$ = operationsDB.onChangeUserByToken(dbConfig, token);
@@ -248,9 +258,9 @@ Socketeio.use(function (socket, next) {
             operationsDB[getUserFunction](dbConfig, getUserParam).then((user) => {
                 if (user) {
                     //find mutuals
-                    const list = user['followers'].filter(function(val) {
+                    const list = user['followers'].filter(function (val) {
                         return user['following'].indexOf(val) != -1;
-                      });
+                    });
                     if (list && list.length > 0) {
                         operationsDB.findUsersByUserUID(dbConfig, list).then((users) => {
                             if (users && users.length)
@@ -271,12 +281,38 @@ Socketeio.use(function (socket, next) {
 
         });
 
+        socket.on('setNewProfilePic', function (data) {
+            const token = data.token;
+            const image = data.image;
+            const extensionImage = data.fileName.split('.').pop();
+            const dbConfig = config.userConfig;
+
+            operationsDB.findUserByToken(dbConfig, token).then((user) => {
+                const userUID = user.userUID;
+                if (userUID) {
+                    const dir = `./storage/users/${userUID}/avatar`;
+                    const filename = `${userUID}.${extensionImage}`;
+                    if (!fs.existsSync(dir)) {
+                        fs.mkdirSync(dir, { recursive: true }, err => { });
+                    }
+
+                    fs.writeFile(`${dir}/${filename}`, image, function (err) {
+                        if (err) return console.log(err);
+                        //console.log(`${dir}/${filename}`);
+                    });
+                }
+            });
+        });
+
+
+
+
         //indirect
 
         socket.on('addIndirect', function (data) {
             const token = data.token;
             const indirect = data.data;
-            
+
             const dbConfigUser = config.userConfig;
             const dbConfigIndirect = config.indirectConfig;
 
@@ -292,10 +328,10 @@ Socketeio.use(function (socket, next) {
             });
 
         });
-        
+
         socket.on('getIndirects', function (data) {
             const token = data.token;
-            
+
             const dbConfigUser = config.userConfig;
             const dbConfigIndirect = config.indirectConfig;
 
@@ -318,10 +354,10 @@ Socketeio.use(function (socket, next) {
                                     indirects[indexI]["userData"] = userData;
                                 }
                             })
-                        console.log(indirects);
-                        socket.emit("onGetIndirects", indirects);
+                            console.log(indirects);
+                            socket.emit("onGetIndirects", indirects);
+                        })
                     })
-                })
                 }
             });
 
@@ -336,6 +372,21 @@ function testConexion() {
         console.log(clients); // => [6em3d4TJP8Et9EMNAAAA, G5p55dHhGgUnLUctAAAB]
     });
 }
+
+function getAvatarPath(userUID) {
+    const dir = `./storage/users/${userUID}/avatar`;
+    var fileName = "";
+
+    const files = fs.readdirSync(dir);
+
+    files.forEach(file => {
+        fileName = file;
+    });
+    return dir + "/" + fileName
+
+
+}
+
 
 //MONGO DB
 

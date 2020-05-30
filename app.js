@@ -305,8 +305,23 @@ Socketeio.use(function (socket, next) {
                     const indirectsUIDS = user.following;
                     indirectsUIDS.push(userUID);
                     operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS, userUID).then((indirects) => {
+                        const users = [];
+                        indirects.forEach(indirect => {
+                            users.push(indirect.userUID);
+                        });
+                        const uniqUsers = [...new Set(users)];
+                        operationsDB.findUsersPublicDataByUserUID(dbConfigUser, uniqUsers).then((usersData) => {
+                            console.log(usersData);
+                            indirects.forEach((indirect, indexI) => {
+                                const userData = usersData.find(user => user.userUID === indirect.userUID)
+                                if (userData) {
+                                    indirects[indexI]["userData"] = userData;
+                                }
+                            })
+                        console.log(indirects);
                         socket.emit("onGetIndirects", indirects);
                     })
+                })
                 }
             });
 

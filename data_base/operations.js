@@ -118,6 +118,27 @@ module.exports.findUsersByUserUID = function (dbConfig, usersUID) {
     })
 }
 
+module.exports.findUsersPublicDataByUserUID = function (dbConfig, usersUID) {
+    const url = dbConfig.URL;
+    const dataBaseName = dbConfig.NAME;
+    const collectionName = dbConfig.COLLECTION;
+
+    return new Promise(resolve => {
+        client.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db(dataBaseName);
+            var query = { userUID: { $in : usersUID }};
+            var fields = { name: 1 , surname: 1, userId: 1, userUID: 1 };
+
+            dbo.collection(collectionName).find(query).project(fields).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                resolve(result);
+            });
+        });
+    })
+}
+
 
 module.exports.onChangeFindUsersByUserUID = function (dbConfig, getUserFunction, getUserParam, typeList) {
     const url = dbConfig.URL;

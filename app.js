@@ -146,7 +146,17 @@ Socketeio.use(function (socket, next) {
 
             const updateData$ = operationsDB.onChangeUserByToken(dbConfig, token);
             updateData$.subscribe((user) => {
-                socket.emit("getUserByToken", user);
+                if (user) {
+                    const userUID = user.userUID;
+                    const filePath = getAvatarPath(userUID);
+                    fs.readFile(filePath, function (err, data) {
+                        if (err) return console.log(err);
+                        const image = data;
+                        socket.emit("getUserByToken", user);
+                        socket.emit("getUserAvatarByToken", image);
+                    })
+
+                } else socket.emit("getUserByToken", null);
             });
         });
 
@@ -161,15 +171,52 @@ Socketeio.use(function (socket, next) {
             //TO DO comprobar datos y crear objeto con datos que puede modificar el email no
             const dbConfig = config.userConfig;
             operationsDB.findUserByUserId(dbConfig, userId).then((user) => {
-                if (user)
-                    socket.emit("getUserByUserId", user);
-                else
-                    socket.emit("getUserByUserId", null);
+
+                if (user) {
+                    const userUID = user.userUID;
+                    const filePath = getAvatarPath(userUID);
+                    if (filePath) {
+                        fs.readFile(filePath, function (err, data) {
+                            if (err) return console.log(err);
+                            const image = data;
+                            socket.emit("getUserByUserId", user);
+                            if (image)
+                                socket.emit("getUserAvatarByUserId", image);
+                            else
+                                socket.emit("getUserAvatarByUserId", null);
+                        })
+                    } else {
+                        socket.emit("getUserByUserId", user);
+                        socket.emit("getUserAvatarByUserId", null);
+                    }
+
+
+                } else socket.emit("getUserByUserId", "UserNotFound");
+
             });
 
             const updateData$ = operationsDB.onChangeFindUserByUserId(dbConfig, userId);
             updateData$.subscribe((user) => {
-                socket.emit("getUserByUserId", user);
+                if (user) {
+                    const userUID = user.userUID;
+                    const filePath = getAvatarPath(userUID);
+                    if (filePath) {
+                        fs.readFile(filePath, function (err, data) {
+                            if (err) return console.log(err);
+                            const image = data;
+                            socket.emit("getUserByUserId", user);
+                            if (image)
+                                socket.emit("getUserAvatarByUserId", image);
+                            else
+                                socket.emit("getUserAvatarByUserId", null);
+                        })
+                    } else {
+                        socket.emit("getUserByUserId", user);
+                        socket.emit("getUserAvatarByUserId", null);
+                    }
+
+
+                } else socket.emit("getUserByUserId", "UserNotFound");
             });
 
             //setTimeout(() => subscription.unsubscribe(), 10 * 1000);
@@ -228,8 +275,23 @@ Socketeio.use(function (socket, next) {
                     if (list && list.length > 0) {
                         operationsDB.findUsersByUserUID(dbConfig, list).then((users) => {
                             console.log(users);
-                            if (users && users.length)
+                            if (users && users.length) {
+                                const usersUIDs = [];
+                                users.forEach(user => usersUIDs.push(user.userUID));
+                                const uniqUsersUIDs = [...new Set(usersUIDs)];
+                                const images = {};
+                                uniqUsersUIDs.forEach(userUID => {
+                                    const filePath = getAvatarPath(userUID);
+                                    if (filePath) {
+                                        const image = fs.readFileSync(filePath);
+                                        images[userUID] = image;
+                                    }
+
+                                })
                                 socket.emit("getFollowList", users);
+                                socket.emit("getFollowListImages", images);
+
+                            }
                             else
                                 socket.emit("getFollowList", []);
                         });
@@ -376,6 +438,9 @@ function testConexion() {
 function getAvatarPath(userUID) {
     const dir = `./storage/users/${userUID}/avatar`;
     var fileName = "";
+    if (!fs.existsSync(dir)) {
+        return false;
+    }
 
     const files = fs.readdirSync(dir);
 

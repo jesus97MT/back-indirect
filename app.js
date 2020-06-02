@@ -409,15 +409,26 @@ Socketeio.use(function (socket, next) {
                         });
                         const uniqUsers = [...new Set(users)];
                         operationsDB.findUsersPublicDataByUserUID(dbConfigUser, uniqUsers).then((usersData) => {
-                            console.log(usersData);
+                            const images = {};
+
                             indirects.forEach((indirect, indexI) => {
                                 const userData = usersData.find(user => user.userUID === indirect.userUID)
                                 if (userData) {
+                                    const userUID = userData.userUID;
+                                    console.log(userUID)
+
+                                    const filePath = getAvatarPath(userUID);
+
+                                    if (filePath) {
+                                        const image = fs.readFileSync(filePath);
+                                        images[userUID] = image;
+                                    }
                                     indirects[indexI]["userData"] = userData;
                                 }
                             })
-                            console.log(indirects);
                             socket.emit("onGetIndirects", indirects);
+                            socket.emit("onGetIndirectsAvatars", images);
+
                         })
                     })
                 }

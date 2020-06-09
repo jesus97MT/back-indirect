@@ -88,9 +88,15 @@ Socketeio.use(function (socket, next) {
                 socket.emit("getToken", newToken);
 
                 operationsDB.findUserByToken(dbConfig, newToken).then((user) => {
-                    console.log(user)
-                    if (user) socket.emit("getUserByLogin", user);
-                    socket.emit("getUserByLogin", null);
+                    if (user) {
+                        const userUID = user.userUID;
+                        const filePath = getAvatarPath(userUID);
+                        if (filePath) {
+                            const image = fs.readFileSync(filePath);
+                            if (image) socket.emit("getUserAvatarByLogin", image);
+                        }
+                        socket.emit("getUserByLogin", user);
+                    } else socket.emit("getUserByLogin", null);
                 });
             });
 
@@ -99,8 +105,16 @@ Socketeio.use(function (socket, next) {
             const dbConfig = config.userConfig;
             const token = socket.handshake.query.token;
             operationsDB.findUserByToken(dbConfig, token).then((user) => {
-                if (user) socket.emit("getUserByToken", user);
-                socket.emit("getUserByToken", null);
+
+                if (user) {
+                    const userUID = user.userUID;
+                    const filePath = getAvatarPath(userUID);
+                    if (filePath) {
+                        const image = fs.readFileSync(filePath);
+                        if (image) socket.emit("getUserAvatarByToken", image);
+                    }
+                    socket.emit("getUserByToken", user);
+                } else socket.emit("getUserByToken", null);
             });
 
         }
@@ -131,15 +145,15 @@ Socketeio.use(function (socket, next) {
             const dbConfig = config.userConfig;
 
             operationsDB.findUserByToken(dbConfig, token).then((user) => {
+
                 if (user) {
                     const userUID = user.userUID;
                     const filePath = getAvatarPath(userUID);
-                    fs.readFile(filePath, function (err, data) {
-                        if (err) return console.log(err);
-                        const image = data;
-                        socket.emit("getUserByToken", user);
-                        socket.emit("getUserAvatarByToken", image);
-                    })
+                    if (filePath) {
+                        const image = fs.readFileSync(filePath);
+                        if (image) socket.emit("getUserAvatarByToken", image);
+                    }
+                    socket.emit("getUserByToken", user);
 
                 } else socket.emit("getUserByToken", null);
             });
@@ -149,12 +163,12 @@ Socketeio.use(function (socket, next) {
                 if (user) {
                     const userUID = user.userUID;
                     const filePath = getAvatarPath(userUID);
-                    fs.readFile(filePath, function (err, data) {
-                        if (err) return console.log(err);
-                        const image = data;
-                        socket.emit("getUserByToken", user);
-                        socket.emit("getUserAvatarByToken", image);
-                    })
+                    if (filePath) {
+                        const image = fs.readFileSync(filePath);
+                        if (image) socket.emit("getUserAvatarByToken", image);
+                    }
+                    socket.emit("getUserByToken", user);
+
 
                 } else socket.emit("getUserByToken", null);
             });

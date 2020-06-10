@@ -374,7 +374,7 @@ Socketeio.use(function (socket, next) {
 
                     fs.writeFile(`${dir}/${filename}`, image, function (err) {
                         if (err) return console.log(err);
-                        //console.log(`${dir}/${filename}`);
+                        socket.emit("setNewProfilePic", true);
                     });
                 }
             });

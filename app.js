@@ -339,10 +339,23 @@ Socketeio.use(function (socket, next) {
                     });
                     if (list && list.length > 0) {
                         operationsDB.findUsersByUserUID(dbConfig, list).then((users) => {
-                            if (users && users.length)
+                            const images = {};
+                            if (users && users.length) {
+                                users.forEach((user, indexI) => {
+                                    const userUID = user.userUID;
+                                    const filePath = getAvatarPath(userUID);
+
+                                    if (filePath) {
+                                        const image = fs.readFileSync(filePath);
+                                        images[userUID] = image;
+                                    }
+                                });
+                                socket.emit("getMutualAvatarsList", images);
                                 socket.emit("getMutualList", users);
-                            else
+                            } else {
                                 socket.emit("getMutualList", []);
+                                socket.emit("getMutualAvatarsList", null);
+                            }
                         });
                     }
                     /*const updateData$ = operationsDB.onChangeFindUsersByUserUID(dbConfig, getUserFunction, getUserParam, typeList);

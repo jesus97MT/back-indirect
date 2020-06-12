@@ -333,7 +333,7 @@ module.exports.addIndirect = function (dbConfig, indirect) {
 }
 
 
-module.exports.getIndirects = function (dbConfig, usersUID, myUserUID) {
+module.exports.getIndirects = function (dbConfig, usersUID, myUserUID, defaultPagintaion, skipPagination) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
@@ -356,7 +356,7 @@ module.exports.getIndirects = function (dbConfig, usersUID, myUserUID) {
                 }
             ]
             }
-            dbo.collection(collectionName).find(query).toArray(function (err, result) {
+            dbo.collection(collectionName).find(query).sort( { dateCreation: -1 } ).limit(defaultPagintaion).skip(skipPagination).toArray(function (err, result) {
                 if (err) throw err;
                 db.close();
                 resolve(result);

@@ -420,6 +420,10 @@ Socketeio.use(function (socket, next) {
 
         socket.on('getIndirects', function (data) {
             const token = data.token;
+            const counterPagination = data.countScroll || 0;
+            const pagination = 3;
+            const defaultPagintaion = 3;
+            const skipPagination = counterPagination * pagination;
 
             const dbConfigUser = config.userConfig;
             const dbConfigIndirect = config.indirectConfig;
@@ -429,7 +433,7 @@ Socketeio.use(function (socket, next) {
                 if (userUID) {
                     const indirectsUIDS = user.following;
                     indirectsUIDS.push(userUID);
-                    operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS, userUID).then((indirects) => {
+                    operationsDB.getIndirects(dbConfigIndirect, indirectsUIDS, userUID, defaultPagintaion, skipPagination).then((indirects) => {
                         const users = [];
                         indirects.forEach(indirect => {
                             users.push(indirect.userUID);

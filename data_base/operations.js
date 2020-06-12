@@ -333,17 +333,20 @@ module.exports.addIndirect = function (dbConfig, indirect) {
 }
 
 
-module.exports.getIndirects = function (dbConfig, usersUID, myUserUID, defaultPagintaion, skipPagination) {
+module.exports.getIndirects = function (dbConfig, usersUID, myUserUID, defaultPagintaion, skipPagination, dateIndirects, directionPagination) {
     const url = dbConfig.URL;
     const dataBaseName = dbConfig.NAME;
     const collectionName = dbConfig.COLLECTION;
-    const publicIndirect= true;
+    const publicIndirect = true;
+    const order = -1;
+    const operationCompare = directionPagination ? "$gte" : "$lte";
+    const dateToFilter = dateIndirects;
 
     return new Promise(resolve => {
         client.connect(url, function (err, db) {
             if (err) throw err;
             var dbo = db.db(dataBaseName);
-            var query = { userUID: { $in : usersUID },
+            var query = { userUID: { $in : usersUID }, dateCreation: { [operationCompare]: dateToFilter},
              $or: [
                 {
                     public: publicIndirect
@@ -356,9 +359,10 @@ module.exports.getIndirects = function (dbConfig, usersUID, myUserUID, defaultPa
                 }
             ]
             }
-            dbo.collection(collectionName).find(query).sort( { dateCreation: -1 } ).limit(defaultPagintaion).skip(skipPagination).toArray(function (err, result) {
+            dbo.collection(collectionName).find(query).sort( { dateCreation: order } ).limit(defaultPagintaion).skip(skipPagination).toArray(function (err, result) {
                 if (err) throw err;
                 db.close();
+                console.log(result)
                 resolve(result);
             });
         });

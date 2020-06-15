@@ -15,6 +15,8 @@ const HOST = 'localhost';
 const rxjs = require('rxjs')
 const fs = require('fs')
 
+const crypto = require('crypto');
+
 
 //SOCKET IO
 Socketeio.use(function (socket, next) {
@@ -26,9 +28,12 @@ Socketeio.use(function (socket, next) {
                 const userData = JSON.parse(socket.handshake.query.user)
                 const email = userData.email;
                 const password = userData.password;
+                var mykey = crypto.createCipher('aes-128-cbc', 'mypassword');
+                var passwordEncrypt = mykey.update(password, 'utf8', 'hex')
+                passwordEncrypt += mykey.final('hex');
 
                 operationsDB.findUserByEmail(dbConfig, email).then((user) => {
-                    if (user && user.password === password) {
+                    if (user && user.password === passwordEncrypt) {
                         console.log('conected')
                         next();
                     } else {
@@ -61,10 +66,13 @@ Socketeio.use(function (socket, next) {
                 const user = JSON.parse(socket.handshake.query.user)
                 const email = user.email;
                 const password = user.password;
+                var mykey = crypto.createCipher('aes-128-cbc', 'mypassword');
+                var passwordEncrypt = mykey.update(password, 'utf8', 'hex')
+                passwordEncrypt += mykey.final('hex');
                 const userId = user.userId;
                 const userUID = Utils.getUID();
 
-                operationsDB.createUser(dbConfig, email, password, userId, userUID);
+                operationsDB.createUser(dbConfig, email, passwordEncrypt, userId, userUID);
                 next();
                 break;
             }

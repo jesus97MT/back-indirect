@@ -87,6 +87,7 @@ Socketeio.use(function (socket, next) {
     .on("connect", (socket) => {
         const op = socket.handshake.query.op || null;
         if (op === "login") {
+            console.log("Version Back 1.0.3 21/06/2020");
             const dbConfig = config.userConfig;
             const userData = JSON.parse(socket.handshake.query.user)
             const email = userData.email;
@@ -110,6 +111,7 @@ Socketeio.use(function (socket, next) {
 
         }
         if (op === "token") {
+            console.log("Version Back 1.0.3 21/06/2020");
             const dbConfig = config.userConfig;
             const token = socket.handshake.query.token;
             operationsDB.findUserByToken(dbConfig, token).then((user) => {
